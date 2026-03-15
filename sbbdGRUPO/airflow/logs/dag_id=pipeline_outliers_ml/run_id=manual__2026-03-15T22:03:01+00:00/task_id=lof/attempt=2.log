@@ -1,0 +1,3 @@
+{"timestamp":"2026-03-15T22:29:33.721413Z","level":"info","event":"DAG bundles loaded: dags-folder","logger":"airflow.dag_processing.bundles.manager.DagBundlesManager","filename":"manager.py","lineno":179}
+{"timestamp":"2026-03-15T22:29:33.723020Z","level":"info","event":"Filling up the DagBag from /home/raquel/programacao/estudos/sbbdGRUPO/airflow/dags/limpeza_dag.py","logger":"airflow.models.dagbag.DagBag","filename":"dagbag.py","lineno":593}
+{"timestamp":"2026-03-15T22:29:33.860664Z","level":"info","event":"Executando: python /home/raquel/programacao/estudos/sbbdGRUPO/limpeza/lof.py","logger":"unusual_prefix_41cd5a7cf28eaf2177ecb828c54c3e952670ab38_limpeza_dag","filename":"limpeza_dag.py","lineno":156}

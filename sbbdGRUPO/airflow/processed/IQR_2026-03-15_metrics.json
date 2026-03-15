@@ -1,0 +1,10 @@
+{
+  "technique": "IQR",
+  "n_total": 226750,
+  "n_outliers": 103034,
+  "n_removidos": 103034,
+  "pct_outliers": 45.44,
+  "elapsed_s": 2.1532,
+  "result_file": "/home/raquel/programacao/estudos/sbbdGRUPO/airflow/processed/IQR_2026-03-15.csv",
+  "iqr_factor": 1.5
+}

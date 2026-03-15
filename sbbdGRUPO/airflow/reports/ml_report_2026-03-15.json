@@ -1,0 +1,93 @@
+{
+  "execution_date": "2026-03-15",
+  "alvo": "Temperatura do Ar a 2m",
+  "modelo": "RandomForestRegressor",
+  "metricas": [
+    "MAE",
+    "RMSE",
+    "R2"
+  ],
+  "resultados": [
+    {
+      "metodo": "IQR",
+      "n_amostras_treino": 30803,
+      "n_amostras_teste": 7701,
+      "features_usadas": [
+        "Umidade Relativa do Ar a 2m",
+        "Velocidade Máxima do Vento 10m",
+        "Direção do Vento 10m",
+        "Fluxo de Calor no Solo"
+      ],
+      "MAE": 0.2317,
+      "RMSE": 0.2941,
+      "R2": 0.8151,
+      "feature_importance": {
+        "Umidade Relativa do Ar a 2m": 0.1962,
+        "Velocidade Máxima do Vento 10m": 0.0806,
+        "Direção do Vento 10m": 0.0784,
+        "Fluxo de Calor no Solo": 0.6449
+      }
+    },
+    {
+      "metodo": "zscore",
+      "n_amostras_treino": 89073,
+      "n_amostras_teste": 22269,
+      "features_usadas": [
+        "Umidade Relativa do Ar a 2m",
+        "Velocidade Máxima do Vento 10m",
+        "Direção do Vento 10m",
+        "Fluxo de Calor no Solo"
+      ],
+      "MAE": 0.2322,
+      "RMSE": 0.2985,
+      "R2": 0.8699,
+      "feature_importance": {
+        "Umidade Relativa do Ar a 2m": 0.1941,
+        "Velocidade Máxima do Vento 10m": 0.0552,
+        "Direção do Vento 10m": 0.0524,
+        "Fluxo de Calor no Solo": 0.6983
+      }
+    },
+    {
+      "metodo": "lof",
+      "n_amostras_treino": 117912,
+      "n_amostras_teste": 29478,
+      "features_usadas": [
+        "Umidade Relativa do Ar a 2m",
+        "Velocidade Máxima do Vento 10m",
+        "Direção do Vento 10m",
+        "Fluxo de Calor no Solo"
+      ],
+      "MAE": 0.2385,
+      "RMSE": 0.3124,
+      "R2": 0.8863,
+      "feature_importance": {
+        "Umidade Relativa do Ar a 2m": 0.7668,
+        "Velocidade Máxima do Vento 10m": 0.0529,
+        "Direção do Vento 10m": 0.0465,
+        "Fluxo de Calor no Solo": 0.1338
+      }
+    },
+    {
+      "metodo": "isolation_forest",
+      "n_amostras_treino": 102608,
+      "n_amostras_teste": 25652,
+      "features_usadas": [
+        "Umidade Relativa do Ar a 2m",
+        "Velocidade Máxima do Vento 10m",
+        "Direção do Vento 10m",
+        "Fluxo de Calor no Solo"
+      ],
+      "MAE": 0.2313,
+      "RMSE": 0.2998,
+      "R2": 0.8552,
+      "feature_importance": {
+        "Umidade Relativa do Ar a 2m": 0.21,
+        "Velocidade Máxima do Vento 10m": 0.062,
+        "Direção do Vento 10m": 0.0561,
+        "Fluxo de Calor no Solo": 0.6718
+      }
+    }
+  ],
+  "erros": []
+}

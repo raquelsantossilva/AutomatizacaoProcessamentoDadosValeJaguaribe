@@ -1,0 +1,9 @@
+{
+  "technique": "LOF",
+  "n_total": 310360,
+  "n_outliers": 8813,
+  "n_removidos": 8813,
+  "pct_outliers": 2.84,
+  "elapsed_s": 785.1837,
+  "result_file": "/home/raquel/programacao/estudos/sbbdGRUPO/airflow/processed/lof_2026-03-15.csv"
+}

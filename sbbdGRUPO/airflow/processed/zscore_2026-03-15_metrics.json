@@ -1,0 +1,10 @@
+{
+  "technique": "Z-Score",
+  "n_total": 226750,
+  "n_outliers": 46865,
+  "n_removidos": 46865,
+  "pct_outliers": 20.67,
+  "elapsed_s": 6.795,
+  "result_file": "/home/raquel/programacao/estudos/sbbdGRUPO/airflow/processed/zscore_2026-03-15.csv",
+  "threshold": 3.0
+}

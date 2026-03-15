@@ -1,0 +1,9 @@
+{
+  "technique": "Isolation Forest",
+  "n_total": 226750,
+  "n_outliers": 14960,
+  "n_removidos": 14960,
+  "pct_outliers": 6.6,
+  "elapsed_s": 8.3533,
+  "result_file": "/home/raquel/programacao/estudos/sbbdGRUPO/airflow/processed/isolation_forest_2026-03-15.csv"
+}
