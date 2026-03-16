@@ -354,8 +354,8 @@ with DAG(
 
 **Fluxo:**
 ```
-start → verificar_dados → interpolacao ──┬─► IQR              ─┐
-                                         ├─► Z-Score           ├─► ml_random_forest → end
+start → verificar_dados → interpolacao ──┬─► knn              ─┐
+                                         ├─► svm           ├─► ml_random_forest → end
                                          ├─► LOF               │
                                          └─► Isolation Forest ─┘
 ```
