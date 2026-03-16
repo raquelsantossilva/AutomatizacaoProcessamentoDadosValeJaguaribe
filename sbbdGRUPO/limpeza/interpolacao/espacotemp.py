@@ -1,52 +1,76 @@
 from __future__ import annotations
 
+import json
 import os
 import re
 import numpy as np
 import pandas as pd
 from pathlib import Path
 from tqdm import tqdm
-from pykrige.ok import OrdinaryKriging
 
 # ── Configurações ─────────────────────────────────────────────────────────────
 
-pasta          = Path(os.environ.get("DATA_DIR", "/home/raquel/programacao/estudos/sbbdGRUPO/airflow/dados"))
-dados_metadata = "/home/raquel/programacao/estudos/sbbdGRUPO/airflow/stations_metadata.csv"
-
+pasta            = Path(os.environ.get("DATA_DIR", "/home/raquel/programacao/estudos/sbbdGRUPO/airflow/dados"))
+dados_metadata   = "/home/raquel/programacao/estudos/sbbdGRUPO/airflow/stations_metadata.csv"
 interpolated_dir = Path(os.environ.get("INTERPOLATED_DIR", "."))
 interpolated_dir.mkdir(parents=True, exist_ok=True)
 
-arquivos_vale_jaguaribe = [
-    "station_4711_data.csv", "station_5727_data.csv",
-    "station_20_data.csv",   "station_59_data.csv",
-    "station_21_data.csv",   "station_79_data.csv",
-    "station_62_data.csv",   "station_35857_data.csv",
-    "station_35742_data.csv","station_24_data.csv",
-    "station_6_data.csv",    "station_35855_data.csv"
-]
+# ── Variáveis recebidas da DAG via env var ────────────────────────────────────
 
-# Só as variáveis usadas no modelo
-VARIAVEIS = [
-    "Temperatura do Ar a 2m",
-    "Umidade Relativa do Ar a 2m",
-    "Velocidade Máxima do Vento 10m",
-    "Direção do Vento 10m",
-    "Fluxo de Calor no Solo",
-]
+_features_env = os.environ.get("FEATURES")
+_alvo_env     = os.environ.get("COLUNA_ALVO")
 
-MIN_PONTOS_OK = 3  # mínimo para Krigagem ser válida
+if _features_env:
+    FEATURES = json.loads(_features_env)
+    print(f"FEATURES recebidas da DAG: {FEATURES}")
+else:
+    FEATURES = [
+        "Umidade Relativa do Ar Mínima a 2m",
+        "Velocidade Máxima do Vento 10m",
+        "Direção do Vento 2m",
+        "Fluxo de Calor no Solo",
+    ]
+    print(f"[AVISO] Env var FEATURES não encontrada. Usando fallback: {FEATURES}")
+
+if _alvo_env:
+    COLUNA_ALVO = _alvo_env
+    print(f"COLUNA_ALVO recebida da DAG: {COLUNA_ALVO}")
+else:
+    COLUNA_ALVO = "Temperatura do Ar a 2m"
+    print(f"[AVISO] Env var COLUNA_ALVO não encontrada. Usando fallback: {COLUNA_ALVO}")
+
+# Interpola todas as features + o alvo (sem duplicatas)
+VARIAVEIS = list(dict.fromkeys([COLUNA_ALVO] + FEATURES))
+
+JANELA_MM = 72
+
+# ── Lê todos os CSVs da pasta dinamicamente ───────────────────────────────────
+
+arquivos_csv = sorted(pasta.glob("*.csv"))
+if not arquivos_csv:
+    raise FileNotFoundError(f"Nenhum arquivo .csv encontrado em: {pasta}")
+
+print(f"\nArquivos encontrados em {pasta}: {len(arquivos_csv)}")
+for f in arquivos_csv:
+    print(f"  {f.name}")
 
 # ── Carregamento ──────────────────────────────────────────────────────────────
 
 metadata  = pd.read_csv(dados_metadata)
 lista_dfs = []
 
-for f in arquivos_vale_jaguaribe:
-    caminho    = pasta / f
-    df_temp    = pd.read_csv(caminho)
-    id_estacao = re.search(r'\d+', f).group()
-    df_temp["id"] = int(id_estacao)
+for caminho in arquivos_csv:
+    df_temp = pd.read_csv(caminho)
+    match   = re.search(r'\d+', caminho.name)
+    if match:
+        df_temp["id"] = int(match.group())
+    else:
+        print(f"  [AVISO] Não foi possível extrair id de '{caminho.name}' — pulando.")
+        continue
     lista_dfs.append(df_temp)
+
+if not lista_dfs:
+    raise ValueError("Nenhum arquivo pôde ser carregado.")
 
 df = pd.concat(lista_dfs, ignore_index=True)
 df = df.merge(metadata, on="id", how="left")
@@ -57,9 +81,9 @@ df["mes"]  = df["data"].dt.month
 df["dia"]  = df["data"].dt.day
 df["hora"] = df["data"].dt.hour
 
-print(f"Dados carregados: {len(df):,} linhas | {df['id'].nunique()} estações")
+print(f"\nDados carregados: {len(df):,} linhas | {df['id'].nunique()} estações")
 
-# ── Funções de interpolação ───────────────────────────────────────────────────
+# ── Funções ───────────────────────────────────────────────────────────────────
 
 def haversine_vec(lat1, lon1, lats, lons):
     R = 6371
@@ -82,62 +106,18 @@ def idw_batch(lons_ref, lats_ref, lons_src, lats_src, vals_src, p=2):
     return resultados
 
 
-def krigagem_batch(lons_ref, lats_ref, lons_src, lats_src, vals_src):
-    """
-    Krigagem Ordinária para múltiplos pontos alvo em uma única chamada.
-    Ganho principal: o variograma é ajustado UMA vez por timestamp,
-    não uma vez por ponto NaN.
-    """
-    try:
-        ok = OrdinaryKriging(
-            x=lons_src,
-            y=lats_src,
-            z=vals_src,
-            variogram_model="spherical",
-            verbose=False,
-            enable_plotting=False,
-        )
-        z_pred, _ = ok.execute("points", lons_ref, lats_ref)
-        return np.array(z_pred, dtype=float)
-    except Exception:
-        return np.full(len(lons_ref), np.nan)
 
-
-def interpolar_batch(lons_ref, lats_ref, lons_src, lats_src, vals_src):
-    """
-    Krigagem com fallback IDW:
-    - Se pontos suficientes (>= MIN_PONTOS_OK): tenta Krigagem, IDW nos que falharem
-    - Se poucos pontos (1 ou 2): usa IDW diretamente (melhor que deixar NaN)
-    """
-    if len(vals_src) < MIN_PONTOS_OK:
-        # poucos pontos — IDW direto, sem tentar Krigagem
-        return idw_batch(lons_ref, lats_ref, lons_src, lats_src, vals_src)
-
-    resultados = krigagem_batch(lons_ref, lats_ref, lons_src, lats_src, vals_src)
-
-    mask_nan = np.isnan(resultados)
-    if mask_nan.any():
-        idw_vals = idw_batch(
-            lons_ref[mask_nan], lats_ref[mask_nan],
-            lons_src, lats_src, vals_src,
-        )
-        resultados[mask_nan] = idw_vals
-
-    return resultados
-
-
-# ── Preenchimento por timestamp (batch) ───────────────────────────────────────
 
 def preencher_variavel(df: pd.DataFrame, variavel: str) -> pd.Series:
     valores  = df[variavel].copy()
     mask_nan = df[variavel].isna()
 
     if not mask_nan.any():
+        print(f"  Sem NaNs para preencher.")
         return valores
 
-    # ── Nível 1: mesma data/hora — batch por timestamp ────────────────────────
-    df_nan     = df[mask_nan]
-    timestamps = df_nan.groupby(["ano", "mes", "dia", "hora"]).groups
+    # ── Nível 1: mesma data/hora — IDW batch por timestamp ───────────────────
+    timestamps = df[mask_nan].groupby(["ano", "mes", "dia", "hora"]).groups
 
     for (ano, mes, dia, hora), idx_nan in tqdm(
         timestamps.items(),
@@ -153,17 +133,17 @@ def preencher_variavel(df: pd.DataFrame, variavel: str) -> pd.Series:
             df[variavel].notna()
         ]
         if len(fontes) == 0:
-            continue  # nenhum ponto disponível neste timestamp
+            continue
 
         alvo = df.loc[idx_nan]
-        pred = interpolar_batch(
-            alvo["longitude"].values,  alvo["latitude"].values,
+        pred = idw_batch(
+            alvo["longitude"].values,   alvo["latitude"].values,
             fontes["longitude"].values, fontes["latitude"].values,
             fontes[variavel].values,
         )
         valores.loc[idx_nan] = pred
 
-    # ── Nível 2: mesmo dia, horas ±1–6h (expandido) ──────────────────────────
+    # ── Nível 2: mesmo dia, horas ±1–3h — IDW ────────────────────────────────
     ainda_nan = valores.isna() & mask_nan
     if ainda_nan.any():
         for idx in tqdm(
@@ -183,19 +163,20 @@ def preencher_variavel(df: pd.DataFrame, variavel: str) -> pd.Series:
                 (outras["ano"] == ano) &
                 (outras["mes"] == mes) &
                 (outras["dia"] == dia) &
-                dif_c.between(1, 6)    &  # expandido de ±3h para ±6h
+                dif_c.between(1, 3)    &
                 outras[variavel].notna()
             ]
             if len(fontes) == 0:
                 continue
-            pred = interpolar_batch(
+
+            pred = idw_batch(
                 np.array([lon]), np.array([lat]),
                 fontes["longitude"].values, fontes["latitude"].values,
                 fontes[variavel].values,
             )
             valores.at[idx] = pred[0]
 
-    # ── Nível 3: mesmo mês/hora, qualquer dia ────────────────────────────────
+    # ── Nível 3: mesmo mês/hora, qualquer dia — IDW ───────────────────────────
     ainda_nan = valores.isna() & mask_nan
     if ainda_nan.any():
         for idx in tqdm(
@@ -217,7 +198,8 @@ def preencher_variavel(df: pd.DataFrame, variavel: str) -> pd.Series:
             ]
             if len(fontes) == 0:
                 continue
-            pred = interpolar_batch(
+
+            pred = idw_batch(
                 np.array([lon]), np.array([lat]),
                 fontes["longitude"].values, fontes["latitude"].values,
                 fontes[variavel].values,
@@ -233,7 +215,7 @@ relatorio = []
 
 for variavel in VARIAVEIS:
     if variavel not in df.columns:
-        print(f"[AVISO] Coluna '{variavel}' não encontrada. Pulando.")
+        print(f"\n[AVISO] Coluna '{variavel}' não encontrada no dataset. Pulando.")
         continue
 
     nan_antes = int(df[variavel].isna().sum())
@@ -241,6 +223,7 @@ for variavel in VARIAVEIS:
 
     coluna_saida     = f"{variavel}_preenchida"
     df[coluna_saida] = preencher_variavel(df, variavel)
+    df[variavel]     = df[coluna_saida]  # sobrescreve a coluna original
 
     nan_depois  = int(df[coluna_saida].isna().sum())
     preenchidos = nan_antes - nan_depois

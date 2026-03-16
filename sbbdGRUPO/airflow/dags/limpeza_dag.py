@@ -31,7 +31,7 @@ for _dir in (INTERPOLATED_DIR, NORMALIZED_DIR, PROCESSED_DIR, REPORTS_DIR):
 NORMALIZACAO_SCRIPT =  Path(os.getenv("NORMALIZACAO_SCRIPT","/home/raquel/programacao/estudos/sbbdGRUPO/limpeza/normalizacao.py"))
 # Script de interpolação
 INTERPOLACAO_SCRIPT = Path(os.getenv("INTERPOLACAO_SCRIPT",
-    "/home/raquel/programacao/estudos/sbbdGRUPO/limpeza/interpolacao/interpolacaobia.py"))
+    "/home/raquel/programacao/estudos/sbbdGRUPO/limpeza/interpolacao/espacotemp.py"))
 
 # Scripts de detecção de outliers
 ISOLATION_FOREST_SCRIPT = SCRIPTS_DIR / "isolation_forest.py"
