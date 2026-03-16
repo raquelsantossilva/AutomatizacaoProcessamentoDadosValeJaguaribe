@@ -15,18 +15,14 @@ logger = logging.getLogger(__name__)
 
 
 def main() -> None:
-    # ------------------------------------------------------------------ #
-    # 1. Leitura das variáveis de ambiente
-    # ------------------------------------------------------------------ #
-    data_dir       = Path(os.environ.get("DATA_DIR", "/home/raquel/programacao/estudos/sbbdGRUPO/airflow/dados"))
+    
+    data_dir       = Path(os.environ.get("DATA_DIR", "/home/raquel/programacao/estudos/sbbdGRUPO/airflow/Normalized"))
     processed_dir  = Path(os.environ.get("PROCESSED_DIR", "/home/raquel/programacao/estudos/sbbdGRUPO/airflow/processed"))
     execution_date = os.environ.get("EXECUTION_DATE", "no-date")
 
     processed_dir.mkdir(parents=True, exist_ok=True)
 
-    # ------------------------------------------------------------------ #
-    # 2. Carregamento dos dados
-    # ------------------------------------------------------------------ #
+    
     arquivos = glob.glob(str(data_dir / "*.csv"))
 
     if not arquivos:

@@ -27,24 +27,21 @@ REPORTS_DIR      = BASE_DIR / "reports"
 for _dir in (INTERPOLATED_DIR, NORMALIZED_DIR, PROCESSED_DIR, REPORTS_DIR):
     _dir.mkdir(parents=True, exist_ok=True)
 
-#Script de normalizacao
 NORMALIZACAO_SCRIPT =  Path(os.getenv("NORMALIZACAO_SCRIPT","/home/raquel/programacao/estudos/sbbdGRUPO/limpeza/normalizacao.py"))
-# Script de interpolação
+
+
 INTERPOLACAO_SCRIPT = Path(os.getenv("INTERPOLACAO_SCRIPT",
     "/home/raquel/programacao/estudos/sbbdGRUPO/limpeza/interpolacao/espacotemp.py"))
 
-# Scripts de detecção de outliers
 ISOLATION_FOREST_SCRIPT = SCRIPTS_DIR / "isolation_forest.py"
 LOF_SCRIPT              = SCRIPTS_DIR / "lof.py"
-ZSCORE_SCRIPT           = SCRIPTS_DIR / "zscore.py"
-IQR_SCRIPT              = SCRIPTS_DIR / "IQR.py"
 KNN_SCRIPT              = SCRIPTS_DIR / "knn.py"
-# Coluna alvo e features
+SVM_SCRIPT              = SCRIPTS_DIR / "svm.py"
+
 COLUNA_ALVO = "Temperatura do Ar a 2m"
 FEATURES    = [
     "Umidade Relativa do Ar Mínima a 2m",
     "Velocidade Máxima do Vento 10m",
-    "Direção do Vento 2m",
     "Fluxo de Calor no Solo",
 ]
 
@@ -52,10 +49,10 @@ FEATURES    = [
 
 # Métodos de outlier e sufixo esperado no arquivo processado
 METODOS = {
-    "IQR":              "IQR",
-    "zscore":           "zscore",
     "lof":              "lof",
     "isolation_forest": "isolation_forest",
+    "knn":              "knn",
+    "svm":              "svm",
 }
 
 
@@ -69,7 +66,6 @@ default_args = {
 
 
 def verificar_dados(**context) -> None:
-    """Verifica se DATA_DIR contém CSVs antes de iniciar o pipeline."""
     csv_files = list(DATA_DIR.glob("*.csv"))
     if not csv_files:
         raise AirflowFailException(f"Nenhum arquivo .csv encontrado em: {DATA_DIR}")
@@ -86,7 +82,7 @@ def run_interpolacao(**context) -> None:
         **os.environ,
         "DATA_DIR":        str(DATA_DIR),
         "INTERPOLATED_DIR": str(INTERPOLATED_DIR),
-        "EXECUTION_DATE":  context["ds"],
+        "EXECUTION_DATE":  context["ts"],
     }
     cmd = ["python", str(INTERPOLACAO_SCRIPT)]
     logger.info("Executando interpolação: %s", " ".join(cmd))
@@ -119,7 +115,7 @@ def run_normalizacao(**context) -> None:
         **os.environ,
         "DATA_DIR":        str(INTERPOLATED_DIR),
         "NORMALIZED_DIR":   str(NORMALIZED_DIR),
-        "EXECUTION_DATE":  context["ds"],
+        "EXECUTION_DATE":  context["ts"],
     }
     cmd = ["python", str(NORMALIZACAO_SCRIPT)]
     logger.info("Executando normalização: %s", " ".join(cmd))
@@ -150,7 +146,7 @@ def _run_script(script_path: Path, context: dict) -> None:
         "DATA_DIR":        str(NORMALIZED_DIR),  # scripts leem os dados normalizados
         "PROCESSED_DIR":   str(PROCESSED_DIR),
         "REPORTS_DIR":     str(REPORTS_DIR),
-        "EXECUTION_DATE":  context["ds"],
+        "EXECUTION_DATE":  context["ts"],
     }
     cmd = ["python", str(script_path)]
     logger.info("Executando: %s", " ".join(cmd))
@@ -172,17 +168,12 @@ def run_isolation_forest(**context) -> None:
 def run_lof(**context) -> None:
     _run_script(LOF_SCRIPT, context)
 
-def run_zscore(**context) -> None:
-    _run_script(ZSCORE_SCRIPT, context)
-
-def run_iqr(**context) -> None:
-    _run_script(IQR_SCRIPT, context)
-
 def run_knn(**context) -> None:
     _run_script(KNN_SCRIPT, context)
-# ---------------------------------------------------------------------------
-# Task ML — Random Forest em cada dataset processado
-# ---------------------------------------------------------------------------
+
+def run_svm(**context) -> None:
+    _run_script(SVM_SCRIPT, context)
+
 
 def _encontrar_arquivo(metodo_sufixo: str) -> Path | None:
     """Retorna o arquivo processado mais recente para o método informado."""
@@ -329,26 +320,25 @@ def ml_random_forest(**context) -> None:
 
     # Salva JSON com todos os resultados
     report = {
-        "execution_date": context["ds"],
+        "execution_date": context["ts"],
         "alvo":           COLUNA_ALVO,
         "modelo":         "RandomForestRegressor",
         "metricas":       ["MAE", "RMSE", "R2"],
         "resultados":     resultados,
         "erros":          erros,
     }
-    report_path = REPORTS_DIR / f"ml_report_{context['ds']}.json"
+    ts_safe = context["ts"].replace(":", "-").replace("+", "_")
+
+    report_path = REPORTS_DIR / f"ml_report_{ts_safe}.json"
     report_path.write_text(
-        __import__("json").dumps(report, indent=2, ensure_ascii=False)
-    )
+    json.dumps(report, indent=2, ensure_ascii=False)
+    ) 
     logger.info("✔ Relatório ML salvo em: %s", report_path)
 
     context["ti"].xcom_push(key="ml_report_path", value=str(report_path))
     context["ti"].xcom_push(key="ml_resultados",  value=resultados)
 
 
-# ---------------------------------------------------------------------------
-# Definição da DAG
-# ---------------------------------------------------------------------------
 
 with DAG(
     dag_id="pipeline_outliers_ml",
@@ -400,37 +390,31 @@ start → verificar_dados → interpolacao ──┬─► IQR              ─�
         task_id="normalizacao",
         python_callable=run_normalizacao,
         execution_timeout=timedelta(hours=2),
-        doc_md="Normalização — lê INTERPOLATED_DIR, salva CSV em NORMALIZED_DIR.",
+        doc_md="Normalização — lê NORMALIZED, salva CSV em NORMALIZED_DIR.",
     )
 
     isolation_forest = PythonOperator(
         task_id="isolation_forest",
         python_callable=run_isolation_forest,
-        doc_md="Isolation Forest — lê INTERPOLATED_DIR, salva em PROCESSED_DIR.",
+        doc_md="Isolation Forest — lê NORMALIZED, salva em PROCESSED_DIR.",
     )
 
     lof = PythonOperator(
         task_id="lof",
         python_callable=run_lof,
-        doc_md="Local Outlier Factor — lê INTERPOLATED_DIR, salva em PROCESSED_DIR.",
+        doc_md="Local Outlier Factor — lê NORMALIZED, salva em PROCESSED_DIR.",
     )
 
-    zscore = PythonOperator(
-        task_id="zscore",
-        python_callable=run_zscore,
-        doc_md="Z-Score — lê INTERPOLATED_DIR, salva em PROCESSED_DIR.",
-    )
-
-    iqr = PythonOperator(
-        task_id="IQR",
-        python_callable=run_iqr,
-        doc_md="IQR — lê INTERPOLATED_DIR, salva em PROCESSED_DIR.",
+    svm = PythonOperator(
+        task_id="svm",
+        python_callable=run_svm,
+        doc_md="One-Class SVM — lê NORMALIZED, salva em PROCESSED_DIR.",
     )
 
     knn = PythonOperator(
         task_id="knn",
         python_callable=run_knn,
-        doc_md="KNN Imputer — lê INTERPOLATED_DIR, salva em PROCESSED_DIR.",
+        doc_md="KNN Imputer — lê NORMALIZED, salva em PROCESSED_DIR.",
     )
 
     ml = PythonOperator(
@@ -455,4 +439,4 @@ start → verificar_dados → interpolacao ──┬─► IQR              ─�
     #                                      ├─► zscore            │
     #                                      └─► IQR ──────────────┘
     #
-    start >> verificar >> interpolacao >> normalizacao >> [isolation_forest, lof, zscore, iqr,knn] >> ml >> end
+    start >> verificar >> interpolacao >> normalizacao >> [isolation_forest, lof,svm,knn] >> ml >> end

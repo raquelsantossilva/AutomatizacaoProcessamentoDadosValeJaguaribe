@@ -8,14 +8,12 @@ import pandas as pd
 from pathlib import Path
 from tqdm import tqdm
 
-# ── Configurações ─────────────────────────────────────────────────────────────
 
 pasta            = Path(os.environ.get("DATA_DIR", "/home/raquel/programacao/estudos/sbbdGRUPO/airflow/dados"))
 dados_metadata   = "/home/raquel/programacao/estudos/sbbdGRUPO/airflow/stations_metadata.csv"
 interpolated_dir = Path(os.environ.get("INTERPOLATED_DIR", "."))
 interpolated_dir.mkdir(parents=True, exist_ok=True)
 
-# ── Variáveis recebidas da DAG via env var ────────────────────────────────────
 
 _features_env = os.environ.get("FEATURES")
 _alvo_env     = os.environ.get("COLUNA_ALVO")
@@ -27,7 +25,6 @@ else:
     FEATURES = [
         "Umidade Relativa do Ar Mínima a 2m",
         "Velocidade Máxima do Vento 10m",
-        "Direção do Vento 2m",
         "Fluxo de Calor no Solo",
     ]
     print(f"[AVISO] Env var FEATURES não encontrada. Usando fallback: {FEATURES}")
@@ -42,9 +39,7 @@ else:
 # Interpola todas as features + o alvo (sem duplicatas)
 VARIAVEIS = list(dict.fromkeys([COLUNA_ALVO] + FEATURES))
 
-JANELA_MM = 72
 
-# ── Lê todos os CSVs da pasta dinamicamente ───────────────────────────────────
 
 arquivos_csv = sorted(pasta.glob("*.csv"))
 if not arquivos_csv:
@@ -54,7 +49,6 @@ print(f"\nArquivos encontrados em {pasta}: {len(arquivos_csv)}")
 for f in arquivos_csv:
     print(f"  {f.name}")
 
-# ── Carregamento ──────────────────────────────────────────────────────────────
 
 metadata  = pd.read_csv(dados_metadata)
 lista_dfs = []
@@ -83,7 +77,6 @@ df["hora"] = df["data"].dt.hour
 
 print(f"\nDados carregados: {len(df):,} linhas | {df['id'].nunique()} estações")
 
-# ── Funções ───────────────────────────────────────────────────────────────────
 
 def haversine_vec(lat1, lon1, lats, lons):
     R = 6371
@@ -186,11 +179,10 @@ def preencher_variavel(df: pd.DataFrame, variavel: str) -> pd.Series:
             leave=False,
         ):
             row  = df.loc[idx]
-            ano, mes, hora, id_ = int(row["ano"]), int(row["mes"]), int(row["hora"]), row["id"]
+            mes, hora, id_ = int(row["mes"]), int(row["hora"]), row["id"]
             lat, lon            = row["latitude"], row["longitude"]
 
             fontes = df[
-                (df["ano"]  == ano)  &
                 (df["mes"]  == mes)  &
                 (df["hora"] == hora) &
                 (df["id"]   != id_)  &
@@ -209,7 +201,6 @@ def preencher_variavel(df: pd.DataFrame, variavel: str) -> pd.Series:
     return valores
 
 
-# ── Loop principal ────────────────────────────────────────────────────────────
 
 relatorio = []
 
@@ -253,7 +244,6 @@ for r in relatorio:
     )
 print("=" * 65)
 
-# ── Exportar ──────────────────────────────────────────────────────────────────
 
 saida = interpolated_dir / "interpolacao_todas_variaveis.csv"
 df.to_csv(saida, index=False)

@@ -3,8 +3,8 @@ import json
 import os
 from pathlib import Path
 import pandas as pd
-
-# ── Variáveis recebidas da DAG via env var ────────────────────────────────────
+from matplotlib import pyplot as plt
+import seaborn as sns
 
 _features_env = os.environ.get("FEATURES")
 _alvo_env     = os.environ.get("COLUNA_ALVO")
@@ -16,7 +16,6 @@ else:
     FEATURES = [
         "Umidade Relativa do Ar Mínima a 2m",
         "Velocidade Máxima do Vento 10m",
-        "Direção do Vento 2m",
         "Fluxo de Calor no Solo",
     ]
     print(f"[AVISO] Env var FEATURES não encontrada. Usando fallback: {FEATURES}")
@@ -46,8 +45,8 @@ arquivo_entrada = arquivos[-1]
 print(f"\nLendo: {arquivo_entrada}")
 dados = pd.read_csv(arquivo_entrada)
 
-# ── Normalização ──────────────────────────────────────────────────────────────
 
+# ── Normalização ──────────────────────────────────────────────────────────────
 # Filtra só as colunas que existem no dataframe
 colunas_presentes = [c for c in COLUNAS_PARA_NORMALIZAR if c in dados.columns]
 colunas_ausentes  = [c for c in COLUNAS_PARA_NORMALIZAR if c not in dados.columns]

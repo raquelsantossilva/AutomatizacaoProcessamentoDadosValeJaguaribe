@@ -18,7 +18,7 @@ def main() -> None:
     # ------------------------------------------------------------------ #
     # 1. Leitura das variáveis de ambiente
     # ------------------------------------------------------------------ #
-    data_dir       = Path(os.environ.get("DATA_DIR", "/home/raquel/programacao/estudos/sbbdGRUPO/airflow/dados"))
+    data_dir       = Path(os.environ.get("DATA_DIR", "/home/raquel/programacao/estudos/sbbdGRUPO/airflow/Normalized"))
     processed_dir  = Path(os.environ.get("PROCESSED_DIR", "/home/raquel/programacao/estudos/sbbdGRUPO/airflow/processed"))
     execution_date = os.environ.get("EXECUTION_DATE", "no-date")
 
@@ -41,9 +41,6 @@ def main() -> None:
 
     logger.info("Colunas usadas (%d): %s", len(num_cols), num_cols)
 
-    # ------------------------------------------------------------------ #
-    # 3. Local Outlier Factor
-    # ------------------------------------------------------------------ #
     logger.info("Executando Local Outlier Factor...")
     start = time.time()
 

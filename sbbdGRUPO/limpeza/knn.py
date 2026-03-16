@@ -19,7 +19,6 @@ else:
     FEATURES = [
         "Umidade Relativa do Ar Mínima a 2m",
         "Velocidade Máxima do Vento 10m",
-        "Direção do Vento 2m",
         "Fluxo de Calor no Solo",
     ]
     print(f"[AVISO] Env var FEATURES não encontrada. Usando fallback: {FEATURES}")
@@ -33,14 +32,12 @@ else:
 
 COLUNAS_KNN = list(dict.fromkeys([COLUNA_ALVO] + FEATURES))
 
-# ── Caminhos ──────────────────────────────────────────────────────────────────
 
 caminho_pasta  = os.environ.get("DATA_DIR", "/home/raquel/programacao/estudos/sbbdGRUPO/airflow/Normalized")
 pasta_saida    = Path(os.environ.get("PROCESSED_DIR", "/home/raquel/programacao/estudos/sbbdGRUPO/airflow/Processed"))
 execution_date = os.environ.get("EXECUTION_DATE", "no-date")
 pasta_saida.mkdir(parents=True, exist_ok=True)
 
-# ── Carregamento ──────────────────────────────────────────────────────────────
 
 arquivos = glob.glob(os.path.join(caminho_pasta, "*.csv"))
 if not arquivos:
