@@ -1,0 +1,9 @@
+{
+  "technique": "Isolation Forest",
+  "n_total": 226750,
+  "n_outliers": 33125,
+  "n_removidos": 33125,
+  "pct_outliers": 14.61,
+  "elapsed_s": 1.2796,
+  "result_file": "C:\\Users\\12bea\\OneDrive\\Documentos\\SBBD_algoritms\\algoritmos\\isolation_forest.csv"
+}

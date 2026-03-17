@@ -1,0 +1,8 @@
+{
+  "technique": "SVM",
+  "n_total": 226750,
+  "n_outliers": 11344,
+  "n_removidos": 11344,
+  "pct_outliers": 5.0,
+  "result_file": "C:\\Users\\12bea\\OneDrive\\Documentos\\SBBD_algoritms\\algoritmos\\svm.csv"
+}
