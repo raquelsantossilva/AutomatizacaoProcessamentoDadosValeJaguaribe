@@ -1,0 +1,10 @@
+{
+  "tecnica": "lof",
+  "n_registros": 148512,
+  "mae_mean": 0.1582,
+  "mae_std": 0.0006,
+  "rmse_mean": 0.2044,
+  "rmse_std": 0.0009,
+  "r2_mean": 0.889,
+  "r2_std": 0.0011
+}

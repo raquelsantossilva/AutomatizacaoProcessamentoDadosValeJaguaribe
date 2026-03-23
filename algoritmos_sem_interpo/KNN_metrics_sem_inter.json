@@ -1,0 +1,8 @@
+{
+  "technique": "KNN",
+  "n_total": 149737,
+  "n_outliers": 7487,
+  "n_removidos": 7487,
+  "pct_outliers": 5.0,
+  "result_file": "C:\\Users\\12bea\\OneDrive\\Documentos\\SBBD_algoritms\\algoritmos_sem_interpo\\knn_sem_inter.csv"
+}

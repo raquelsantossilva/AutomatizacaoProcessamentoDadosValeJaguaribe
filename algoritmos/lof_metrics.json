@@ -1,9 +1,0 @@
-{
-  "technique": "LOF",
-  "n_total": 226750,
-  "n_outliers": 13933,
-  "n_removidos": 13933,
-  "pct_outliers": 6.14,
-  "elapsed_s": 1.1791,
-  "result_file": "C:\\Users\\12bea\\OneDrive\\Documentos\\SBBD_algoritms\\algoritmos\\lof.csv"
-}

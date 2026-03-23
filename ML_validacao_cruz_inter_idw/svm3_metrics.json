@@ -1,0 +1,10 @@
+{
+  "tecnica": "svm",
+  "n_registros": 164654,
+  "mae_mean": 0.1818,
+  "mae_std": 0.0008,
+  "rmse_mean": 0.2417,
+  "rmse_std": 0.001,
+  "r2_mean": 0.8311,
+  "r2_std": 0.0016
+}

@@ -1,0 +1,8 @@
+{
+  "technique": "SVM",
+  "n_total": 226750,
+  "n_outliers": 11360,
+  "n_removidos": 11360,
+  "pct_outliers": 5.01,
+  "result_file": "C:\\Users\\12bea\\OneDrive\\Documentos\\SBBD_algoritms\\algoritmos_sem_interpo\\svm_sem_inter.csv"
+}

@@ -1,0 +1,9 @@
+{
+  "technique": "LOF",
+  "n_total": 226750,
+  "n_outliers": 1555,
+  "n_removidos": 1555,
+  "pct_outliers": 0.69,
+  "elapsed_s": 1.5719,
+  "result_file": "C:\\Users\\12bea\\OneDrive\\Documentos\\SBBD_algoritms\\algoritmos_inter_krig\\lof.csv"
+}

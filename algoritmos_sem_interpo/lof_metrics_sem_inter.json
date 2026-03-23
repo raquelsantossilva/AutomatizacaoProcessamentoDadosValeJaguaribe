@@ -1,0 +1,9 @@
+{
+  "technique": "LOF",
+  "n_total": 226750,
+  "n_outliers": 3797,
+  "n_removidos": 3797,
+  "pct_outliers": 1.67,
+  "elapsed_s": 1.7639,
+  "result_file": "C:\\Users\\12bea\\OneDrive\\Documentos\\SBBD_algoritms\\algoritmos_sem_interpo\\lof_sem_inter.csv"
+}

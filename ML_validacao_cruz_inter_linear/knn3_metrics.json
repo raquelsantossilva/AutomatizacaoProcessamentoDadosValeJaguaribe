@@ -1,0 +1,10 @@
+{
+  "tecnica": "knn",
+  "n_registros": 138833,
+  "mae_mean": 0.1505,
+  "mae_std": 0.0009,
+  "rmse_mean": 0.1927,
+  "rmse_std": 0.0013,
+  "r2_mean": 0.8977,
+  "r2_std": 0.0015
+}

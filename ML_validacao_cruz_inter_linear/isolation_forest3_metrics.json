@@ -1,0 +1,10 @@
+{
+  "tecnica": "isolation_forest",
+  "n_registros": 113540,
+  "mae_mean": 0.1512,
+  "mae_std": 0.0006,
+  "rmse_mean": 0.1932,
+  "rmse_std": 0.0007,
+  "r2_mean": 0.8445,
+  "r2_std": 0.0013
+}

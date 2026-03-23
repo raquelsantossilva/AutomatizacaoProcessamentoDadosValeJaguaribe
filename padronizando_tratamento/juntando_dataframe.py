@@ -38,7 +38,14 @@ print(f"tempo : {end-start :.4f} segundos")
 
 print(len(df))
 print("dataframe pronto")
-"""
-df.to_csv('df_unido.csv', index=False)
 
-"""
+colunas = [
+    "Temperatura do Ar a 2m",
+    "Umidade Relativa do Ar Mínima a 2m",
+    "Velocidade Máxima do Vento 10m",
+    "Fluxo de Calor no Solo",
+    
+]
+
+print(len(df))
+

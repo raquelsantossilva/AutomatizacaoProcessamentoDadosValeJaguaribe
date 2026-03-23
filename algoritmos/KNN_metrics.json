@@ -1,8 +1,0 @@
-{
-  "technique": "KNN",
-  "n_total": 226750,
-  "n_outliers": 11338,
-  "n_removidos": 11338,
-  "pct_outliers": 5.0,
-  "result_file": "C:\\Users\\12bea\\OneDrive\\Documentos\\SBBD_algoritms\\algoritmos\\knn.csv"
-}
